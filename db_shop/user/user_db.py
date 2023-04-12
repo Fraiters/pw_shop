@@ -8,7 +8,7 @@ from db_utils.sql_constructor import QueryCondition
 class UserDb(BaseDb):
     """Класс для работы с таблицей пользователей (user_data)"""
 
-    table = "user_data"  # type: str
+    table = "user_table"  # type: str
     """сущность (таблица)"""
 
     def __init__(self):
