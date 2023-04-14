@@ -1,3 +1,5 @@
+import traceback
+
 from flask import Flask, jsonify
 from db_shop.user.user_db import UserDb
 from server_utils.http_exception import BadRequest
@@ -26,7 +28,7 @@ def auth_user():
 
     if password is None:
         msg = "Данные пароля неизвестны"
-        raise Exception(msg)
+        raise BadRequest(msg)
 
     user_db = UserDb()
     response = user_db.auth_user(request_data=request_data)
@@ -35,5 +37,24 @@ def auth_user():
 
 
 if __name__ == '__main__':
+
+    @app.errorhandler(Exception)
+    def special_exception_handler(error):
+        """Обработка любого необработанного исключения
+        для приведения в человеческий вид
+
+        :param error: необработанная ошибка
+        """
+        result = {
+            "message": str(error),
+            "traceback": traceback.format_exc()
+        }
+        # если это предсказуемая ошибка, то там может быть статус ответа
+        if hasattr(error, "status"):
+            status = error.status
+        else:
+            status = 500
+        return jsonify(result), status
+
     app.run()
 

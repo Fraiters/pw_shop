@@ -1,6 +1,7 @@
 from typing import *
 
-from db_utils.template.sql_template import TEMPL_SQL_SELECT, TEMPL_SQL_WHERE
+from db_utils.template.sql_template import TEMPL_SQL_SELECT, TEMPL_SQL_WHERE, TEMPL_SQL_INSERT, TEMPL_SQL_UPDATE, \
+    TEMPL_KEY_VALUE
 
 
 class QueryCondition:
@@ -49,6 +50,51 @@ class SqlConstructor:
             "query": query
         }
 
+        result = self.format_sql(sql=sql, sql_format=sql_format)
+
+        return result
+
+    def insert(self, table: str, data: Dict[str, Any]) -> str:
+        """Построение insert запроса
+
+        :param table: таблица
+        :param data: данные для вставки
+        """
+        sql = TEMPL_SQL_INSERT
+        column_list = []
+        value_list = []
+        for key, value in data.items():
+            column_list.append(key)
+            value_list.append(value)
+
+        sql_format = {
+            "table": table,
+            "column_list": ",".join(column_list),
+            "value_list": ",".join(value_list)
+        }
+        result = self.format_sql(sql=sql, sql_format=sql_format)
+
+        return result
+
+    def update(self, table: str, data: Dict[str, Any]):
+        """Построение update запроса
+
+        :param table: таблица
+        :param data: данные для обновления
+        """
+        sql = TEMPL_SQL_UPDATE
+        key_value = []
+        for key, value in data.items():
+            sql_format = {
+                "key": key,
+                "value": value
+            }
+            key_value.append(self.format_sql(sql=TEMPL_KEY_VALUE, sql_format=sql_format))
+
+        sql_format = {
+            "table": table,
+            "key_value": ','.join(key_value)
+        }
         result = self.format_sql(sql=sql, sql_format=sql_format)
 
         return result
@@ -127,16 +173,24 @@ if __name__ == '__main__':
     operation = "="
     connector = None
 
+    new_data = {
+        "uuid": "fff",
+        "golum": "ring"
+    }
+
     query_list = [QueryCondition(key=key, value=value, operation=operation, connector=connector)]
 
     res1 = sql_con.select(table="user")
-
     print(res1)
 
     res2 = sql_con.query(query_list=query_list)
-
     print(res2)
 
     res3 = sql_con.where(query_list=query_list)
-
     print(res3)
+
+    res4 = sql_con.insert(table=table, data=new_data)
+    print(res4)
+
+    res5 = sql_con.update(table=table, data=new_data)
+    print(res5)

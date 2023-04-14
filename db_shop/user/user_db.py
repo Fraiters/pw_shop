@@ -3,6 +3,7 @@ from db_utils.base_db import BaseDb
 from typing import *
 from db_utils.db_connection import DbConnection
 from db_utils.sql_constructor import QueryCondition
+from server_utils.http_exception import BadRequest
 
 
 class UserDb(BaseDb):
@@ -34,7 +35,7 @@ class UserDb(BaseDb):
 
         if record is None:
             msg = "Неверный логин"
-            raise Exception(msg)
+            raise BadRequest(msg)
 
         output_data = OutputUserData()
         result = output_data.from_dict(record)
@@ -57,7 +58,7 @@ class UserDb(BaseDb):
             result = output_data.to_dict(data=output_data)
         else:
             msg = "Неверный пароль"
-            raise Exception(msg)
+            raise BadRequest(msg)
 
         return result
 
