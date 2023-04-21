@@ -15,9 +15,10 @@ class BaseDb:
     table = "не заданная таблица"
     """наименование таблицы"""
 
-    def __init__(self, db: DbConnection):
+    def __init__(self):
 
         self.constructor = SqlConstructor()
+        """sql конструктор"""
         self.db = ...  # type: DbConnection
         """подключение к БД"""
 
@@ -46,15 +47,14 @@ class BaseDb:
     def select_all(self) -> List[Dict]:
         """Выбор всех строк (с условием и без) в таблице"""
 
-        sql = SqlConstructor()
         # команда select с учетом указанной таблицы
-        select_sql = sql.select(table=self.table)
+        select_sql = self.constructor.select(table=self.table)
         # если длина списка условий не нуль
         if len(self.query_list) != 0:
             # то в запросе используется команда where
-            where_sql = sql.where(query_list=self.query_list)
+            where_sql = self.constructor.where(query_list=self.query_list)
             # объединение select и where
-            sql_command = sql.join_command(first_command=select_sql, second_command=where_sql)
+            sql_command = self.constructor.join_command(first_command=select_sql, second_command=where_sql)
         else:
             sql_command = select_sql
 
@@ -64,7 +64,6 @@ class BaseDb:
         cursor = con.cursor(cursor_factory=RealDictCursor)
         # выполнение запроса
         cursor.execute(sql_command)
-
         # выбор всех нужных строк с учетом условий
         db_data = cursor.fetchall()
         # закрытие курсора
@@ -100,11 +99,61 @@ class BaseDb:
 
         return result
 
-    def create(self, data: BaseData):
-        pass
+    def create(self, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Создание записи в БД
+
+        :param data: создаваемые данные
+        :return: созданные данные
+        """
+        # команда insert с учетом указанной таблицы
+        insert_sql = self.constructor.insert(table=self.table, data=data)
+        # открытие соединения с БД
+        con = DbConnection().connect()
+        # открытие курсора для обращения к БД
+        cursor = con.cursor(cursor_factory=RealDictCursor)
+        # выполнение запроса
+        cursor.execute(insert_sql)
+        # подтверждение изменений в БД
+        # con.commit()
+        # закрытие курсора
+        cursor.close()
+        # закрытие соединения с БД
+        con.close()
+        print("Соединение с БД закрыто")
+        print("Запись ", data, " Создана")
+        return data
 
     def update(self, data: Dict[str, Any]):
-        pass
+        """
+        Обновление записи в БД
+
+        :param data: обновляемые данные
+        """
+        # команда update с учетом указанной таблицы
+        update_sql = self.constructor.update(table=self.table, data=data)
+        if self.query_list is not None:
+            where_sql = self.constructor.where(query_list=self.query_list)
+            sql_command = self.constructor.join_command(update_sql, where_sql)
+        else:
+            sql_command = update_sql
+        # открытие соединения с БД
+        con = DbConnection().connect()
+        # открытие курсора для обращения к БД
+        cursor = con.cursor(cursor_factory=RealDictCursor)
+        # выполнение запроса
+        cursor.execute(sql_command)
+        # закрытие курсора
+        cursor.close()
+        # закрытие соединения с БД
+        con.close()
+        print("Соединение с БД закрыто")
+        print("Запись ", data, " Обновлена")
 
     def query_in(self, field: str, value: List):
-        pass
+        """Отбор по условию IN для любого поля
+
+        :param field: наименование поля
+        :param value: список значений поля
+        """
+        for cur_value in value:
+            self.add_query(key=field, operation='=', value=cur_value, connector='OR')

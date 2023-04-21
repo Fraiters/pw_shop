@@ -1,4 +1,7 @@
 from typing import *
+from uuid import UUID
+
+from psycopg2._json import Json
 
 from db_utils.template.sql_template import TEMPL_SQL_SELECT, TEMPL_SQL_WHERE, TEMPL_SQL_INSERT, TEMPL_SQL_UPDATE, \
     TEMPL_KEY_VALUE
@@ -64,13 +67,13 @@ class SqlConstructor:
         column_list = []
         value_list = []
         for key, value in data.items():
-            column_list.append(key)
-            value_list.append(value)
+            column_list.append(self.encode_key(key))
+            value_list.append(self.encode_value(value))
 
         sql_format = {
             "table": table,
-            "column_list": ",".join(column_list),
-            "value_list": ",".join(value_list)
+            "column_list": ", ".join(column_list),
+            "value_list": ", ".join(value_list)
         }
         result = self.format_sql(sql=sql, sql_format=sql_format)
 
@@ -153,6 +156,28 @@ class SqlConstructor:
 
         return "\"{key}\"".format(key=key)
 
+    def encode_value(self, value: Any) -> str:
+        """Преобразование ключа
+
+        :param value: значение
+        :return: преобразованное значение
+        """
+        if value is None:
+            return "NULL"
+
+        if isinstance(value, str):
+            new_value = value.replace("'", "\'")
+            result = "'{value}'".format(value=new_value)
+            return result
+
+        if isinstance(value, float) or isinstance(value, int):
+            new_value = str(value)
+            new_value = new_value.replace("'", "\'")
+            result = "'{value}'".format(value=new_value)
+            return result
+
+        return value
+
     def format_sql(self, sql: str, sql_format: Dict[str, str]) -> str:
         """Форматирование sql строки в соответствии с параметрами
 
@@ -174,7 +199,7 @@ if __name__ == '__main__':
     connector = None
 
     new_data = {
-        "uuid": "fff",
+        "uuid": "1",
         "golum": "ring"
     }
 

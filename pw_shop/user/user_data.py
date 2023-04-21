@@ -1,6 +1,9 @@
 from __future__ import annotations
 from typing import *
 
+from pw_shop.user.token import Token
+
+
 class InputUserData:
     """Входные данные пользователя (для авторизации и регистрации)"""
 
@@ -36,6 +39,12 @@ class OutputUserData:
         """баланс"""
         self.rule = ...  # type: str
         """права"""
+
+    @property
+    def get_token(self) -> str:
+        """Получение токена"""
+        token = Token().generate()
+        return token
 
     @classmethod
     def from_dict(cls, data: Dict) -> OutputUserData:

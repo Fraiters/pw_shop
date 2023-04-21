@@ -1,4 +1,5 @@
 from flask import request
+from server_utils.http_exception import BadRequest
 
 
 def get_json():
@@ -16,6 +17,7 @@ def get_request_data():
     if request.method == 'POST':
         # берется json из тела
         result = get_json()
+
     elif request.method == 'GET':
         # берутся аргументы из url
         result = request.args
